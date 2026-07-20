@@ -164,7 +164,7 @@
 
 <script>
 let sb = SUPABASE_ANON_KEY ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
-const S = { who:"Pak Tjen", tab:"beranda", companies:[], tasks:[], docs:[], issues:[] };
+const S = { who:"Pak Tjen", tab:"beranda", docFilter:null, companies:[], tasks:[], docs:[], issues:[] };
 
 const TASK_ST = {
   delegasi:{l:"Didelegasikan",bg:"#EAEEF6",fg:"#294069"},
@@ -237,7 +237,8 @@ async function loadAll(){
 async function reload(){ await loadAll(); render(); }
 
 /* ---------- NAV ---------- */
-function go(tab){ S.tab=tab; render(); }
+function go(tab){ S.docFilter=null; S.tab=tab; render(); }
+function goDocs(f){ S.docFilter=f; S.tab="dokumen"; render(); }
 function setWho(w){ S.who=w; document.querySelectorAll(".who button").forEach(b=>b.classList.toggle("on",b.dataset.who===w)); render(); }
 function render(){
   document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===S.tab));
@@ -253,6 +254,7 @@ function render(){
 function viewBeranda(){
   const need=S.tasks.filter(t=>t.status==="keputusan").length;
   const dueD=S.docs.filter(d=>d.due_date&&daysTo(d.due_date)<=7&&d.status!=="selesai").length;
+  const mailNew=S.docs.filter(d=>d.via==="Email"&&d.status==="baru").length;
   const active=S.tasks.filter(t=>t.status!=="selesai").length;
   const openIss=S.issues.filter(i=>i.status!=="selesai").length;
   const prio=[
@@ -265,6 +267,15 @@ function viewBeranda(){
     <div class="lens-wrap">
       <button class="lens" onclick="go('delegasi')"><div class="ring"><span>${need}</span></div><div class="lbl">Butuh keputusan</div></button>
       <button class="lens" onclick="go('dokumen')"><div class="ring"><span>${dueD}</span></div><div class="lbl">Tenggat dokumen</div></button>
+      <button class="lens" onclick="goDocs('email')" style="grid-column:1/-1">
+        <div class="ring" style="border-color:${mailNew?'var(--gold)':'var(--navy700)'}">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${mailNew?'#E9B949':'#7C8CA8'}" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+        </div>
+        <div style="flex:1"><div class="lbl">Email masuk</div>
+          <div style="color:#fff;font-size:14px;font-weight:700;margin-top:2px">${mailNew? mailNew+" dokumen baru via email" : "Tidak ada yang baru"}</div>
+        </div>
+        ${mailNew?`<span class="chip" style="background:var(--gold);color:var(--navy900)">${mailNew}</span>`:""}
+      </button>
     </div>
     <div class="trip">
       <div class="c"><div class="t">See</div><div class="s">${S.docs.length} dokumen</div></div>
@@ -309,10 +320,16 @@ function viewDelegasi(){
 
 /* ---------- DOKUMEN ---------- */
 function viewDokumen(){
+  const list = S.docFilter==="email" ? S.docs.filter(d=>d.via==="Email") : S.docs;
+  const mailNew=S.docs.filter(d=>d.via==="Email"&&d.status==="baru").length;
   return `
     <div class="row-head"><h1 class="title" style="margin:0">Arsip Dokumen</h1>
       <button class="add" onclick="sheetDoc()">+ Tambah</button></div>
-    ${S.docs.length? S.docs.map(d=>{
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button class="chip" style="padding:7px 13px;background:${S.docFilter?'var(--paper)':'var(--navy800)'};color:${S.docFilter?'var(--muted)':'#fff'};border:1px solid ${S.docFilter?'var(--line)':'var(--navy800)'}" onclick="go('dokumen')">Semua (${S.docs.length})</button>
+      <button class="chip" style="padding:7px 13px;background:${S.docFilter==='email'?'var(--navy800)':'var(--paper)'};color:${S.docFilter==='email'?'#fff':'var(--muted)'};border:1px solid ${S.docFilter==='email'?'var(--navy800)':'var(--line)'}" onclick="goDocs('email')">✉ Email masuk${mailNew?` · ${mailNew} baru`:""}</button>
+    </div>
+    ${list.length? list.map(d=>{
       const fg=DOC_CAT[d.category]||"#66738C";
       return `<div class="card">
         <div style="display:flex;gap:12px">
@@ -328,7 +345,7 @@ function viewDokumen(){
             :`<button class="btn-dark" onclick="dispDoc('${d.id}')">→ Jadikan tugas</button>`}
         </div>
       </div>`;
-    }).join("") : `<div class="empty">Belum ada dokumen. Ketuk "+ Tambah".</div>`}
+    }).join("") : `<div class="empty">${S.docFilter==="email"?"Belum ada dokumen yang masuk via email.<br><span style='font-size:12px'>Kirim file ke <b>data@intibharu-grup.com</b> — otomatis muncul di sini maks. 15 menit.</span>":"Belum ada dokumen. Ketuk \"+ Tambah\"."}</div>`}
   `;
 }
 
