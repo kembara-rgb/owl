@@ -28,14 +28,16 @@
   #login button{width:100%;padding:14px;border-radius:12px;background:var(--gold);color:var(--navy900);font-weight:700}
   #login .err{color:#FFB4B4;font-size:13px;margin-bottom:12px;min-height:18px}
 
-  /* ---- Header ---- */
-  header{background:var(--navy800);padding:16px 20px;position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between}
-  header .wm{letter-spacing:.32em;color:var(--gold);font-size:18px;font-weight:800;line-height:1}
-  header .st{color:#9FB0CC;font-size:9px;letter-spacing:.12em;margin-top:5px}
-  .who{display:flex;background:var(--navy900);border-radius:999px;padding:3px}
-  .who button{font-size:12px;font-weight:500;border-radius:999px;padding:6px 12px;color:#9FB0CC}
+  /* ---- Header (hero) ---- */
+  header{background:linear-gradient(180deg,var(--navy900) 0%,var(--navy800) 100%);padding:30px 20px 22px;position:relative;text-align:center;border-bottom:2px solid rgba(233,185,73,.35)}
+  header .logo-ring{width:98px;height:98px;margin:0 auto;border-radius:999px;background:radial-gradient(circle at 50% 40%,#26406B 0%,#1D2C4F 75%);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2.5px var(--gold),0 0 0 9px rgba(233,185,73,.12),0 14px 34px rgba(0,0,0,.5)}
+  header .wm{letter-spacing:.46em;text-indent:.46em;color:var(--gold);font-size:31px;font-weight:800;line-height:1;margin-top:16px;text-shadow:0 2px 12px rgba(233,185,73,.25)}
+  header .st{font-family:Georgia,'Times New Roman',serif;font-style:italic;color:#C7D3E8;font-size:12.5px;letter-spacing:.02em;margin-top:9px;line-height:1.5}
+  header .gdiv{width:46px;height:2px;background:var(--gold);opacity:.55;margin:14px auto 0;border-radius:2px}
+  .who{display:inline-flex;background:var(--navy900);border-radius:999px;padding:3px;margin-top:14px;box-shadow:inset 0 0 0 1px var(--navy700)}
+  .who button{font-size:13px;font-weight:600;border-radius:999px;padding:7px 16px;color:#9FB0CC}
   .who button.on{background:var(--gold);color:var(--navy900)}
-  .logout{color:#9FB0CC;font-size:12px;margin-left:10px}
+  .logout{position:absolute;top:14px;right:14px;color:#9FB0CC;font-size:12px;padding:6px 12px;border:1px solid var(--navy700);border-radius:999px;background:rgba(20,32,60,.5)}
 
   main{padding:20px 20px 96px}
   h1.title{font-size:20px;font-weight:800;margin-bottom:14px}
@@ -133,16 +135,24 @@
   <!-- APP -->
   <div id="app" class="hide">
     <header>
-      <div>
-        <div class="wm">OWL</div>
-        <div class="st">SEE · UNDERSTAND · SOLVE</div>
+      <button class="logout" onclick="doLogout()">Keluar</button>
+      <div class="logo-ring">
+        <svg width="62" height="62" viewBox="0 0 64 64" fill="none">
+          <path d="M14 21 Q19 5 30 17" stroke="#E9B949" stroke-width="3" stroke-linecap="round"/>
+          <path d="M50 21 Q45 5 34 17" stroke="#E9B949" stroke-width="3" stroke-linecap="round"/>
+          <path d="M32 12 C48 12 54 26 54 38 C54 52 44 58 32 58 C20 58 10 52 10 38 C10 26 16 12 32 12 Z" fill="#294069" stroke="#E9B949" stroke-width="2.5"/>
+          <circle cx="24" cy="34" r="8" fill="#fff" stroke="#E9B949" stroke-width="2.5"/>
+          <circle cx="40" cy="34" r="8" fill="#fff" stroke="#E9B949" stroke-width="2.5"/>
+          <circle cx="24" cy="34" r="3.2" fill="#14203C"/><circle cx="40" cy="34" r="3.2" fill="#14203C"/>
+          <path d="M32 40 l-3 5 h6 z" fill="#E9B949"/>
+        </svg>
       </div>
-      <div style="display:flex;align-items:center">
-        <div class="who">
-          <button data-who="Pak Tjen" class="on" onclick="setWho('Pak Tjen')">Pak Tjen</button>
-          <button data-who="Stephanie" onclick="setWho('Stephanie')">Stephanie</button>
-        </div>
-        <button class="logout" onclick="doLogout()">Keluar</button>
+      <div class="wm">OWL</div>
+      <div class="st">See Everything, Understand Everything,<br>Solve Everything</div>
+      <div class="gdiv"></div>
+      <div class="who">
+        <button data-who="Pak Tjen" class="on" onclick="setWho('Pak Tjen')">Pak Tjen</button>
+        <button data-who="Stephanie" onclick="setWho('Stephanie')">Stephanie</button>
       </div>
     </header>
     <main id="content"></main>
