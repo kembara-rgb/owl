@@ -50,6 +50,8 @@
   .lens .ring{width:54px;height:54px;border-radius:999px;background:var(--navy700);border:2.5px solid var(--gold);display:flex;align-items:center;justify-content:center;flex-shrink:0}
   .lens .ring span{color:var(--gold);font-size:23px;font-weight:800}
   .lens .lbl{color:#C7D3E8;font-size:12px}
+  .urgent-card{border:1.5px solid rgba(210,84,84,.5);background:linear-gradient(180deg,#2A2030 0%,var(--navy800) 90%)}
+  .urgent-badge{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.1em;color:#fff;background:var(--red);padding:3px 10px;border-radius:999px}
   .trip{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
   .trip button.c{background:var(--navy800);border:none;border-radius:16px;padding:12px 6px;display:flex;flex-direction:column;align-items:center;gap:7px;width:100%}
   .trip .ring2{width:38px;height:38px;border-radius:999px;background:var(--navy700);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center}
@@ -279,21 +281,26 @@ function viewBeranda(){
     ...S.tasks.filter(t=>t.status==="keputusan").map(t=>({title:t.title,tag:"Butuh keputusan",d:t.due_date,go:"delegasi"})),
     ...S.docs.filter(d=>d.due_date&&daysTo(d.due_date)<=5&&d.status!=="selesai").map(d=>({title:d.title,tag:d.category,d:d.due_date,go:"dokumen"})),
   ].sort((a,b)=>(daysTo(a.d)??99)-(daysTo(b.d)??99)).slice(0,5);
+  const urgIss=S.issues.filter(i=>i.severity==="Tinggi"&&i.status!=="selesai").map(i=>({title:i.title,go:"perusahaan"}));
+  const urgDocs=S.docs.filter(d=>d.due_date&&daysTo(d.due_date)<=2&&d.status!=="selesai").sort((a,b)=>daysTo(a.due_date)-daysTo(b.due_date)).map(d=>({title:d.title,go:"dokumen"}));
+  const urgent=[...urgIss,...urgDocs]; const urgN=urgent.length;
   return `
     <div class="sub">Halo, <b style="color:var(--ink)">${esc(S.who)}</b> · ${esc(USERS[S.who]?.title||"")}</div>
     <h1 class="title" style="margin-top:2px">Yang butuh perhatian Anda</h1>
-    <div class="lens-wrap">
-      <button class="lens" onclick="go('delegasi')"><div class="ring"><span>${need}</span></div><div class="lbl">Butuh keputusan</div></button>
-      <button class="lens" onclick="go('dokumen')"><div class="ring"><span>${dueD}</span></div><div class="lbl">Tenggat dokumen</div></button>
-      <button class="lens" onclick="goDocs('email')" style="grid-column:1/-1">
-        <div class="ring" style="border-color:${mailNew?'var(--gold)':'var(--navy700)'}">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${mailNew?'#E9B949':'#7C8CA8'}" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
-        </div>
-        <div style="flex:1"><div class="lbl">Email masuk</div>
-          <div style="color:#fff;font-size:14px;font-weight:700;margin-top:2px">${mailNew? mailNew+" dokumen baru via email" : "Tidak ada yang baru"}</div>
-        </div>
-        ${mailNew?`<span class="chip" style="background:var(--gold);color:var(--navy900)">${mailNew}</span>`:""}
-      </button>
+    <button class="lens urgent-card" style="width:100%;margin-bottom:12px" onclick="go('${urgN?urgent[0].go:'perusahaan'}')">
+      <div class="ring" style="border-color:${urgN?'var(--red)':'var(--navy700)'}">
+        <span style="color:${urgN?'var(--red)':'#7C8CA8'}">${urgN}</span>
+      </div>
+      <div style="flex:1;min-width:0">
+        <span class="urgent-badge">URGENT</span>
+        <div style="color:#fff;font-size:14px;font-weight:700;margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${urgN? esc(urgent[0].title)+(urgN>1?` · +${urgN-1} lagi`:"") : "Tidak ada yang mendesak"}</div>
+      </div>
+      ${urgN?`<span class="chip" style="background:var(--red);color:#fff">${urgN}</span>`:""}
+    </button>
+    <div class="trip" style="margin-top:0">
+      <button class="c" onclick="go('delegasi')"><div class="ring2" style="border-color:${need?'var(--gold)':'var(--navy700)'}"><span>${need}</span></div><div class="t">Butuh</div><div class="s">keputusan</div></button>
+      <button class="c" onclick="go('dokumen')"><div class="ring2" style="border-color:${dueD?'var(--gold)':'var(--navy700)'}"><span>${dueD}</span></div><div class="t">Tenggat</div><div class="s">dokumen</div></button>
+      <button class="c" onclick="goDocs('email')"><div class="ring2" style="border-color:${mailNew?'var(--gold)':'var(--navy700)'}"><span>${mailNew}</span></div><div class="t">Email</div><div class="s">masuk</div></button>
     </div>
     <div class="trip">
       <button class="c" onclick="go('dokumen')"><div class="ring2"><span>${S.docs.length}</span></div><div class="t">See</div><div class="s">dokumen</div></button>
