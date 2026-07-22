@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>OWL</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --navy900:#14203C; --navy800:#1D2C4F; --navy700:#294069;
+    --gold:#E9B949; --paper:#F5F6FA; --card:#fff; --ink:#1B2A4A;
+    --muted:#66738C; --line:#E5E8F0; --red:#D25454; --green:#2FA98C;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--navy900);color:var(--ink)}
+  #shell{max-width:480px;margin:0 auto;min-height:100vh;background:var(--paper);position:relative;box-shadow:0 0 60px rgba(0,0,0,.35)}
+  input,select,button,textarea{font-family:inherit;font-size:15px}
+  button{cursor:pointer;border:none;background:none}
+  .hide{display:none!important}
+
+  /* ---- Login ---- */
+  #login{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:32px;background:var(--navy900)}
+  #login .brand{letter-spacing:.34em;color:var(--gold);font-size:30px;font-weight:800;margin-top:14px}
+  #login .tag{color:#9FB0CC;font-size:11px;letter-spacing:.14em;margin:8px 0 34px}
+  #login .box{width:100%;background:var(--navy800);border-radius:22px;padding:24px}
+  #login label{font-size:12px;color:#9FB0CC;display:block;margin:0 0 6px}
+  #login input{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--navy700);background:var(--navy900);color:#fff;margin-bottom:14px;outline:none}
+  #login button{width:100%;padding:14px;border-radius:12px;background:var(--gold);color:var(--navy900);font-weight:700}
+  #login .err{color:#FFB4B4;font-size:13px;margin-bottom:12px;min-height:18px}
+
+  /* ---- Header (hero) ---- */
+  header{background:linear-gradient(180deg,var(--navy900) 0%,var(--navy800) 100%);padding:30px 20px 22px;position:relative;text-align:center;border-bottom:2px solid rgba(233,185,73,.35)}
+  header .logo-ring{width:98px;height:98px;margin:0 auto;border-radius:999px;background:radial-gradient(circle at 50% 40%,#26406B 0%,#1D2C4F 75%);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2.5px var(--gold),0 0 0 9px rgba(233,185,73,.12),0 14px 34px rgba(0,0,0,.5)}
+  header .wm{letter-spacing:.46em;text-indent:.46em;color:var(--gold);font-size:31px;font-weight:800;line-height:1;margin-top:16px;text-shadow:0 2px 12px rgba(233,185,73,.25)}
+  header .st{font-family:Georgia,'Times New Roman',serif;font-style:italic;color:#C7D3E8;font-size:12.5px;letter-spacing:.02em;margin-top:9px;line-height:1.5}
+  header .gdiv{width:46px;height:2px;background:var(--gold);opacity:.55;margin:14px auto 0;border-radius:2px}
+  .who{display:inline-flex;background:var(--navy900);border-radius:999px;padding:3px;margin-top:14px;box-shadow:inset 0 0 0 1px var(--navy700)}
+  .who button{font-size:13px;font-weight:600;border-radius:999px;padding:7px 16px;color:#9FB0CC}
+  .who button.on{background:var(--gold);color:var(--navy900)}
+  .logout{position:absolute;top:14px;right:14px;color:#9FB0CC;font-size:12px;padding:6px 12px;border:1px solid var(--navy700);border-radius:999px;background:rgba(20,32,60,.5)}
+
+  main{padding:20px 20px 96px}
+  h1.title{font-size:20px;font-weight:800;margin-bottom:14px}
+  .sub{font-size:14px;color:var(--muted)}
+  .row-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .add{background:var(--gold);color:var(--navy900);font-weight:700;border-radius:999px;padding:8px 14px;font-size:13px;display:flex;align-items:center;gap:6px}
+
+  .lens-wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .lens{background:var(--navy800);border-radius:18px;padding:16px;display:flex;align-items:center;gap:12px;text-align:left;width:100%}
+  .lens .ring{width:54px;height:54px;border-radius:999px;background:var(--navy700);border:2.5px solid var(--gold);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .lens .ring span{color:var(--gold);font-size:23px;font-weight:800}
+  .lens .lbl{color:#C7D3E8;font-size:12px}
+  .trip{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
+  .trip button.c{background:var(--navy800);border:none;border-radius:16px;padding:12px 6px;display:flex;flex-direction:column;align-items:center;gap:7px;width:100%}
+  .trip .ring2{width:38px;height:38px;border-radius:999px;background:var(--navy700);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center}
+  .trip .ring2 span{color:var(--gold);font-size:15px;font-weight:800}
+  .trip .t{font-size:12px;font-weight:800;color:#fff}
+  .trip .s{font-size:10px;color:#C7D3E8}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:10px}
+  .card .ttl{font-size:15px;font-weight:600}
+  .chip{font-size:10px;font-weight:700;padding:4px 8px;border-radius:999px;white-space:nowrap}
+  .tag{font-size:10px;padding:2px 8px;border-radius:6px;background:var(--paper);color:var(--navy700);border:1px solid var(--line)}
+  .meta{font-size:11px;color:var(--muted);margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .prio{display:flex;align-items:center;gap:12px}
+  .prio .bar{width:5px;height:36px;border-radius:999px;background:var(--gold)}
+  .prio .bar.urgent{background:var(--red)}
+  .btn-dark{background:var(--navy800);color:#fff;font-weight:600;border-radius:10px;padding:8px 12px;font-size:12px;display:inline-flex;gap:6px;align-items:center}
+  .btn-green{background:var(--green);color:#fff;font-weight:700;border-radius:12px;padding:11px;width:100%;margin-top:8px}
+  .muted-note{font-size:12px;color:var(--muted)}
+
+  .h2{font-size:14px;font-weight:700;margin:22px 0 10px}
+  .empty{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;text-align:center;color:var(--muted);font-size:14px}
+
+  /* ---- Bottom nav ---- */
+  nav{max-width:480px;margin:0 auto;position:fixed;bottom:0;left:0;right:0;background:var(--navy800);border-top:1px solid var(--navy700);display:flex;z-index:20}
+  nav button{flex:1;padding:10px 0;display:flex;flex-direction:column;align-items:center;gap:3px;color:#7C8CA8;font-size:11px;font-weight:500}
+  nav button.on{color:var(--gold)}
+  nav svg{width:22px;height:22px}
+
+  /* ---- Sheet ---- */
+  .overlay{position:fixed;inset:0;background:rgba(10,16,31,.5);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+  .sheet{max-width:480px;width:100%;background:var(--card);border-radius:24px 24px 0 0;padding:20px 20px 30px}
+  .sheet h3{font-size:16px;font-weight:800;margin-bottom:14px}
+  .sheet label{font-size:12px;color:var(--muted);display:block;margin:10px 0 5px}
+  .sheet input,.sheet select,.sheet textarea{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--paper);color:var(--ink);outline:none}
+  .sheet .go{width:100%;background:var(--gold);color:var(--navy900);font-weight:700;border-radius:12px;padding:13px;margin-top:16px;display:flex;justify-content:center;gap:8px}
+  .sheet .x{float:right;color:var(--muted);font-size:22px;line-height:1}
+
+  #toast{position:fixed;bottom:84px;left:0;right:0;max-width:480px;margin:0 auto;display:flex;justify-content:center;z-index:50;pointer-events:none}
+  #toast .b{background:var(--navy800);color:#fff;font-size:14px;font-weight:500;border-radius:12px;padding:11px 16px;margin:0 20px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+</style>
+</head>
+<body>
+
+<!-- =================================================================
+   PENGATURAN — isi 2 nilai di bawah ini dari Supabase Bapak.
+   URL sudah diisi. Ganti ANON KEY dengan "anon public" dari
+   Settings → API Keys.  (Tidak perlu dikirim ke siapa pun.)
+================================================================== -->
+<script>
+  let SUPABASE_URL = localStorage.getItem('owl_url') || "https://mssfympzwlqvgdslkjrg.supabase.co";
+  let SUPABASE_ANON_KEY = localStorage.getItem('owl_key') || "";
+</script>
+
+<div id="shell">
+  <!-- LOGIN -->
+  <div id="login">
+    <svg width="52" height="52" viewBox="0 0 64 64" fill="none">
+      <path d="M14 21 Q19 5 30 17" stroke="#E9B949" stroke-width="3" stroke-linecap="round"/>
+      <path d="M50 21 Q45 5 34 17" stroke="#E9B949" stroke-width="3" stroke-linecap="round"/>
+      <path d="M32 12 C48 12 54 26 54 38 C54 52 44 58 32 58 C20 58 10 52 10 38 C10 26 16 12 32 12 Z" fill="#294069" stroke="#E9B949" stroke-width="2.5"/>
+      <circle cx="24" cy="34" r="8" fill="#fff" stroke="#E9B949" stroke-width="2.5"/>
+      <circle cx="40" cy="34" r="8" fill="#fff" stroke="#E9B949" stroke-width="2.5"/>
+      <circle cx="24" cy="34" r="3.2" fill="#14203C"/><circle cx="40" cy="34" r="3.2" fill="#14203C"/>
+      <path d="M32 40 l-3 5 h6 z" fill="#E9B949"/>
+    </svg>
+    <div class="brand">OWL</div>
+    <div class="tag">SEE · UNDERSTAND · SOLVE</div>
+    <div class="box" id="setupBox" style="display:none">
+      <div style="color:#C7D3E8;font-size:13px;margin-bottom:14px;line-height:1.5">Sekali saja — tempel <b style="color:#fff">Publishable Key</b> dari Supabase untuk menyambungkan.</div>
+      <label>Publishable Key</label>
+      <input id="setupKey" type="text" placeholder="sb_publishable_...">
+      <button onclick="saveSetup()" id="setupBtn">Simpan & Lanjut</button>
+    </div>
+    <div class="box" id="loginBox">
+      <div class="err" id="loginErr"></div>
+      <label>Email</label>
+      <input id="email" type="email" autocomplete="username" placeholder="email@intibharu-grup.com">
+      <label>Kata sandi</label>
+      <input id="password" type="password" autocomplete="current-password" placeholder="••••••••">
+      <button onclick="doLogin()" id="loginBtn">Masuk</button>
+      <div style="text-align:center;margin-top:14px"><a href="#" onclick="resetConn();return false" style="color:#7C8CA8;font-size:12px">Atur ulang koneksi</a></div>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="app" class="hide">
+    <header>
+      <button class="logout" onclick="doLogout()">Keluar</button>
+      <div class="logo-ring">
+        <svg width="62" height="62" viewBox="0 0 64 64" fill="none">
+          <path d="M14 21 Q19 5 30 17" stroke="#E9B949" stroke-width="3" stroke-linecap="round"/>
+          <path d="M50 21 Q45 5 34 17" stroke="#E9B949" stroke-width="3" stroke-linecap="round"/>
+          <path d="M32 12 C48 12 54 26 54 38 C54 52 44 58 32 58 C20 58 10 52 10 38 C10 26 16 12 32 12 Z" fill="#294069" stroke="#E9B949" stroke-width="2.5"/>
+          <circle cx="24" cy="34" r="8" fill="#fff" stroke="#E9B949" stroke-width="2.5"/>
+          <circle cx="40" cy="34" r="8" fill="#fff" stroke="#E9B949" stroke-width="2.5"/>
+          <circle cx="24" cy="34" r="3.2" fill="#14203C"/><circle cx="40" cy="34" r="3.2" fill="#14203C"/>
+          <path d="M32 40 l-3 5 h6 z" fill="#E9B949"/>
+        </svg>
+      </div>
+      <div class="wm">OWL</div>
+      <div class="st">See Everything, Understand Everything,<br>Solve Everything</div>
+      <div class="gdiv"></div>
+      <div class="who">
+        <button data-who="Pak Tjen" class="on" onclick="setWho('Pak Tjen')">Pak Tjen</button>
+        <button data-who="Stephanie" onclick="setWho('Stephanie')">Stephanie</button>
+      </div>
+    </header>
+    <main id="content"></main>
+    <nav>
+      <button data-tab="beranda" onclick="go('beranda')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Beranda</button>
+      <button data-tab="delegasi" onclick="go('delegasi')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Delegasi</button>
+      <button data-tab="dokumen" onclick="go('dokumen')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6l2 2h8v12a2 2 0 0 1-2 2H4z"/></svg>Dokumen</button>
+      <button data-tab="perusahaan" onclick="go('perusahaan')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V7l6-4v18M9 21V11l6 4v6M15 21V9l6 4v8"/></svg>Masalah</button>
+    </nav>
+  </div>
+</div>
+
+<div id="sheetHost"></div>
+<div id="toast" class="hide"></div>
+
+<script>
+let sb = SUPABASE_ANON_KEY ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+const S = { who:"Pak Tjen", tab:"beranda", docFilter:null, companies:[], tasks:[], docs:[], issues:[] };
+
+const TASK_ST = {
+  delegasi:{l:"Didelegasikan",bg:"#EAEEF6",fg:"#294069"},
+  kerjakan:{l:"Dikerjakan",bg:"#E4ECFA",fg:"#2E5AA8"},
+  keputusan:{l:"Butuh Keputusan",bg:"#FBEFCF",fg:"#9A7415"},
+  selesai:{l:"Selesai",bg:"#E1F3EE",fg:"#1F7A63"}
+};
+const DOC_CAT = {Principal:"#2E5AA8",Bank:"#1F7A63",Pajak:"#B44A4A",Perizinan:"#9A7415",Lainnya:"#66738C"};
+const ISS_ST = {baru:{l:"Baru",bg:"#FBEFCF",fg:"#9A7415"},ditangani:{l:"Ditangani",bg:"#E4ECFA",fg:"#2E5AA8"},selesai:{l:"Selesai",bg:"#E1F3EE",fg:"#1F7A63"}};
+const SEV = {Rendah:"#66738C",Sedang:"#9A7415",Tinggi:"#B44A4A"};
+const esc = s => (s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const daysTo = d => d==null?null:Math.round((new Date(d)-new Date(new Date().toDateString()))/86400000);
+const dueTxt = d => { const n=daysTo(d); return n==null?"":n<0?`Terlambat ${-n}h`:n===0?"Hari ini":`H-${n}`; };
+
+/* ---------- AUTH ---------- */
+async function init(){
+  if(!SUPABASE_ANON_KEY || !sb){ showSetup(); return; }
+  try{
+    const { data } = await sb.auth.getSession();
+    if(data.session){ await enterApp(); } else { showLogin(); }
+  }catch(e){ showLogin(); }
+}
+function showSetup(){
+  document.getElementById("login").classList.remove("hide");
+  document.getElementById("app").classList.add("hide");
+  document.getElementById("setupBox").style.display="block";
+  document.getElementById("loginBox").style.display="none";
+}
+function saveSetup(){
+  const k=document.getElementById("setupKey").value.trim();
+  if(!k){ return; }
+  localStorage.setItem('owl_url', SUPABASE_URL);
+  localStorage.setItem('owl_key', k);
+  location.reload();
+}
+function resetConn(){ localStorage.removeItem('owl_key'); location.reload(); }
+function showLogin(){
+  document.getElementById("login").classList.remove("hide");
+  document.getElementById("app").classList.add("hide");
+  document.getElementById("setupBox").style.display="none";
+  document.getElementById("loginBox").style.display="block";
+}
+async function doLogin(){
+  const email=document.getElementById("email").value.trim();
+  const password=document.getElementById("password").value;
+  const err=document.getElementById("loginErr"); err.textContent="";
+  const btn=document.getElementById("loginBtn"); btn.textContent="Memproses…"; btn.disabled=true;
+  const { error } = await sb.auth.signInWithPassword({email,password});
+  btn.textContent="Masuk"; btn.disabled=false;
+  if(error){ err.textContent = error.message==="Invalid login credentials" ? "Email atau kata sandi salah." : error.message; return; }
+  await enterApp();
+}
+async function doLogout(){ await sb.auth.signOut(); location.reload(); }
+async function enterApp(){
+  document.getElementById("login").classList.add("hide");
+  document.getElementById("app").classList.remove("hide");
+  await loadAll(); render();
+}
+
+/* ---------- DATA ---------- */
+async function loadAll(){
+  const [c,t,d,i] = await Promise.all([
+    sb.from("companies").select("*").order("segment"),
+    sb.from("tasks").select("*").order("created_at",{ascending:false}),
+    sb.from("documents").select("*").order("created_at",{ascending:false}),
+    sb.from("issues").select("*").order("created_at",{ascending:false}),
+  ]);
+  S.companies=c.data||[]; S.tasks=t.data||[]; S.docs=d.data||[]; S.issues=i.data||[];
+}
+async function reload(){ await loadAll(); render(); }
+
+/* ---------- NAV ---------- */
+function go(tab){ S.docFilter=null; S.tab=tab; render(); }
+function goDocs(f){ S.docFilter=f; S.tab="dokumen"; render(); }
+function setWho(w){ S.who=w; document.querySelectorAll(".who button").forEach(b=>b.classList.toggle("on",b.dataset.who===w)); render(); }
+function render(){
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===S.tab));
+  const el=document.getElementById("content");
+  if(S.tab==="beranda") el.innerHTML=viewBeranda();
+  else if(S.tab==="delegasi") el.innerHTML=viewDelegasi();
+  else if(S.tab==="dokumen") el.innerHTML=viewDokumen();
+  else if(S.tab==="perusahaan") el.innerHTML=viewPerusahaan();
+  window.scrollTo(0,0);
+}
+
+/* ---------- BERANDA ---------- */
+function viewBeranda(){
+  const need=S.tasks.filter(t=>t.status==="keputusan").length;
+  const dueD=S.docs.filter(d=>d.due_date&&daysTo(d.due_date)<=7&&d.status!=="selesai").length;
+  const mailNew=S.docs.filter(d=>d.via==="Email"&&d.status==="baru").length;
+  const active=S.tasks.filter(t=>t.status!=="selesai").length;
+  const openIss=S.issues.filter(i=>i.status!=="selesai").length;
+  const prio=[
+    ...S.tasks.filter(t=>t.status==="keputusan").map(t=>({title:t.title,tag:"Butuh keputusan",d:t.due_date,go:"delegasi"})),
+    ...S.docs.filter(d=>d.due_date&&daysTo(d.due_date)<=5&&d.status!=="selesai").map(d=>({title:d.title,tag:d.category,d:d.due_date,go:"dokumen"})),
+  ].sort((a,b)=>(daysTo(a.d)??99)-(daysTo(b.d)??99)).slice(0,5);
+  return `
+    <div class="sub">Halo, <b style="color:var(--ink)">${esc(S.who)}</b> · ${S.who==="Pak Tjen"?"Direktur Utama":"Direktur"}</div>
+    <h1 class="title" style="margin-top:2px">Yang butuh perhatian Anda</h1>
+    <div class="lens-wrap">
+      <button class="lens" onclick="go('delegasi')"><div class="ring"><span>${need}</span></div><div class="lbl">Butuh keputusan</div></button>
+      <button class="lens" onclick="go('dokumen')"><div class="ring"><span>${dueD}</span></div><div class="lbl">Tenggat dokumen</div></button>
+      <button class="lens" onclick="goDocs('email')" style="grid-column:1/-1">
+        <div class="ring" style="border-color:${mailNew?'var(--gold)':'var(--navy700)'}">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${mailNew?'#E9B949':'#7C8CA8'}" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+        </div>
+        <div style="flex:1"><div class="lbl">Email masuk</div>
+          <div style="color:#fff;font-size:14px;font-weight:700;margin-top:2px">${mailNew? mailNew+" dokumen baru via email" : "Tidak ada yang baru"}</div>
+        </div>
+        ${mailNew?`<span class="chip" style="background:var(--gold);color:var(--navy900)">${mailNew}</span>`:""}
+      </button>
+    </div>
+    <div class="trip">
+      <button class="c" onclick="go('dokumen')"><div class="ring2"><span>${S.docs.length}</span></div><div class="t">See</div><div class="s">dokumen</div></button>
+      <button class="c" onclick="go('perusahaan')"><div class="ring2"><span>${openIss}</span></div><div class="t">Understand</div><div class="s">masalah</div></button>
+      <button class="c" onclick="go('delegasi')"><div class="ring2"><span>${active}</span></div><div class="t">Solve</div><div class="s">tugas aktif</div></button>
+    </div>
+    <div class="h2">Prioritas hari ini</div>
+    ${prio.length? prio.map(p=>`
+      <button class="card prio" style="width:100%;text-align:left" onclick="go('${p.go}')">
+        <div class="bar ${daysTo(p.d)!=null&&daysTo(p.d)<=2?'urgent':''}"></div>
+        <div style="flex:1;min-width:0">
+          <div class="ttl">${esc(p.title)}</div>
+          <div class="meta"><span>${esc(p.tag)}</span>${p.d?`<span>⏱ ${dueTxt(p.d)}</span>`:""}</div>
+        </div>
+      </button>`).join("") : `<div class="empty">Bersih. Tidak ada yang menunggu Anda.</div>`}
+  `;
+}
+
+/* ---------- DELEGASI ---------- */
+function viewDelegasi(){
+  return `
+    <div class="row-head"><h1 class="title" style="margin:0">Delegasi</h1>
+      <button class="add" onclick="sheetTask()">+ Tugas</button></div>
+    ${S.tasks.length? S.tasks.map(t=>{
+      const s=TASK_ST[t.status];
+      return `<div class="card">
+        <div style="display:flex;justify-content:space-between;gap:10px">
+          <span class="ttl" style="${t.status==='selesai'?'text-decoration:line-through;opacity:.55':''}">${esc(t.title)}</span>
+          <span class="chip" style="background:${s.bg};color:${s.fg}">${s.l}</span>
+        </div>
+        <div class="meta">
+          ${t.entity?`<span class="tag">${esc(t.entity)}</span>`:""}
+          ${t.owner?`<span>→ ${esc(t.owner)}</span>`:""}
+          ${t.due_date&&t.status!=='selesai'?`<span style="margin-left:auto;color:${daysTo(t.due_date)<=2?'var(--red)':'var(--muted)'}">⏱ ${dueTxt(t.due_date)}</span>`:""}
+        </div>
+        ${t.status==='keputusan'?`<button class="btn-green" onclick="decide('${t.id}')">✓ Setujui & tuntaskan</button>`:""}
+        ${t.status==='kerjakan'?`<button class="btn-dark" style="margin-top:8px" onclick="finishTask('${t.id}')">Tandai selesai</button>`:""}
+      </div>`;
+    }).join("") : `<div class="empty">Belum ada tugas. Ketuk "+ Tugas".</div>`}
+  `;
+}
+
+/* ---------- DOKUMEN ---------- */
+function viewDokumen(){
+  const list = S.docFilter==="email" ? S.docs.filter(d=>d.via==="Email") : S.docs;
+  const mailNew=S.docs.filter(d=>d.via==="Email"&&d.status==="baru").length;
+  return `
+    <div class="row-head"><h1 class="title" style="margin:0">Arsip Dokumen</h1>
+      <button class="add" onclick="sheetDoc()">+ Tambah</button></div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button class="chip" style="padding:7px 13px;background:${S.docFilter?'var(--paper)':'var(--navy800)'};color:${S.docFilter?'var(--muted)':'#fff'};border:1px solid ${S.docFilter?'var(--line)':'var(--navy800)'}" onclick="go('dokumen')">Semua (${S.docs.length})</button>
+      <button class="chip" style="padding:7px 13px;background:${S.docFilter==='email'?'var(--navy800)':'var(--paper)'};color:${S.docFilter==='email'?'#fff':'var(--muted)'};border:1px solid ${S.docFilter==='email'?'var(--navy800)':'var(--line)'}" onclick="goDocs('email')">✉ Email masuk${mailNew?` · ${mailNew} baru`:""}</button>
+    </div>
+    ${list.length? list.map(d=>{
+      const fg=DOC_CAT[d.category]||"#66738C";
+      return `<div class="card">
+        <div style="display:flex;gap:12px">
+          <div style="flex:1;min-width:0">
+            <div class="ttl">${esc(d.title)}</div>
+            <div class="meta"><span style="color:${fg};font-weight:700">${esc(d.category)}</span>${d.sender?`<span>· ${esc(d.sender)}</span>`:""}${d.via?`<span>· via ${esc(d.via)}</span>`:""}</div>
+          </div>
+          ${d.due_date?`<span style="font-size:11px;white-space:nowrap;color:${daysTo(d.due_date)<=3?'var(--red)':'var(--muted)'}">⏱ ${dueTxt(d.due_date)}</span>`:""}
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+          ${d.file_path?`<button class="btn-dark" onclick="openFile('${esc(d.file_path)}')">Lihat file</button>`:""}
+          ${d.status==='disposisi'?`<span style="font-size:11px;color:var(--green);font-weight:600;align-self:center">✓ Sudah jadi tugas</span>`
+            :`<button class="btn-dark" onclick="dispDoc('${d.id}')">→ Jadikan tugas</button>`}
+          <button class="btn-dark" style="background:var(--red)" onclick="delDoc('${d.id}')">🗑 Delete</button>
+        </div>
+      </div>`;
+    }).join("") : `<div class="empty">${S.docFilter==="email"?"Belum ada dokumen yang masuk via email.<br><span style='font-size:12px'>Kirim file ke <b>data@intibharu-grup.com</b> — otomatis muncul di sini maks. 15 menit.</span>":"Belum ada dokumen. Ketuk \"+ Tambah\"."}</div>`}
+  `;
+}
+
+/* ---------- PERUSAHAAN & MASALAH ---------- */
+function viewPerusahaan(){
+  return `
+    <div class="row-head"><h1 class="title" style="margin:0">Perusahaan & Masalah</h1>
+      <button class="add" onclick="sheetIssue()">+ Masalah</button></div>
+    ${S.companies.map(c=>{
+      const iss=S.issues.filter(i=>i.company_id===c.id&&i.status!=='selesai');
+      return `<div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><div class="ttl">${esc(c.name)}</div><div class="meta"><span class="tag">${esc(c.segment||'-')}</span>${c.branch&&c.branch!=='-'?`<span>${esc(c.branch)}</span>`:""}</div></div>
+          <span class="chip" style="background:${iss.length?'#FBE9E9':'#E1F3EE'};color:${iss.length?'#B44A4A':'#1F7A63'}">${iss.length?iss.length+" masalah":"aman"}</span>
+        </div>
+        ${iss.map(i=>{const st=ISS_ST[i.status];return `
+          <div style="border-top:1px dashed var(--line);margin-top:10px;padding-top:10px">
+            <div style="display:flex;justify-content:space-between;gap:8px">
+              <span style="font-size:14px;font-weight:500">${esc(i.title)}</span>
+              <span class="chip" style="background:${st.bg};color:${st.fg}">${st.l}</span>
+            </div>
+            <div class="meta"><span style="color:${SEV[i.severity]};font-weight:600">${esc(i.severity)}</span><span>· ${esc(i.category)}</span></div>
+            <button class="btn-dark" style="margin-top:8px" onclick="dispIssue('${i.id}')">→ Jadikan tugas</button>
+          </div>`;}).join("")}
+      </div>`;
+    }).join("")}
+  `;
+}
+
+/* ---------- SHEETS ---------- */
+function closeSheet(){ document.getElementById("sheetHost").innerHTML=""; }
+function sheet(title,body){
+  document.getElementById("sheetHost").innerHTML=
+    `<div class="overlay" onclick="if(event.target===this)closeSheet()"><div class="sheet">
+      <span class="x" onclick="closeSheet()">×</span><h3>${title}</h3>${body}</div></div>`;
+}
+function opts(arr,sel){ return arr.map(o=>`<option ${o===sel?"selected":""}>${o}</option>`).join(""); }
+
+function sheetTask(){
+  sheet("Delegasikan Tugas",`
+    <label>Apa yang perlu dikerjakan?</label><input id="f_title" placeholder="Tulis tugas…">
+    <div style="display:flex;gap:10px">
+      <div style="flex:1"><label>Unit</label><select id="f_entity">${opts(["FMCG","Honda","Ekspedisi","Korporat"])}</select></div>
+      <div style="flex:1"><label>Ditugaskan</label><select id="f_owner">${opts(["Stephanie","Pak Tjen"])}</select></div>
+    </div>
+    <label>Tenggat</label><input id="f_due" type="date">
+    <button class="go" onclick="addTask()">→ Delegasikan</button>`);
+}
+async function addTask(){
+  const title=val("f_title"); if(!title)return;
+  const {error}=await sb.from("tasks").insert({title,entity:val("f_entity"),owner:val("f_owner"),due_date:val("f_due")||null,status:"delegasi"});
+  closeSheet(); if(error)return toast(error.message); toast("Tugas didelegasikan."); reload();
+}
+async function decide(id){ const {error}=await sb.from("tasks").update({status:"selesai"}).eq("id",id); if(error)return toast(error.message); toast("Keputusan dicatat."); reload(); }
+async function finishTask(id){ const {error}=await sb.from("tasks").update({status:"selesai"}).eq("id",id); if(error)return toast(error.message); toast("Tugas selesai."); reload(); }
+
+function sheetDoc(){
+  sheet("Tambah Dokumen",`
+    <label>Judul / perihal surat</label><input id="d_title" placeholder="mis. SPT Masa PPN">
+    <div style="display:flex;gap:10px">
+      <div style="flex:1"><label>Kategori</label><select id="d_cat">${opts(["Principal","Bank","Pajak","Perizinan","Lainnya"])}</select></div>
+      <div style="flex:1"><label>Cara masuk</label><select id="d_via">${opts(["Scan","Upload","Email","WhatsApp","Drive"])}</select></div>
+    </div>
+    <label>Pengirim</label><input id="d_sender" placeholder="mis. DJP / Bank / principal">
+    <label>Jatuh tempo (opsional)</label><input id="d_due" type="date">
+    <label>File (foto/scan/PDF)</label><input id="d_file" type="file" accept="image/*,application/pdf" capture="environment">
+    <button class="go" onclick="addDoc()">Simpan dokumen</button>`);
+}
+async function addDoc(){
+  const title=val("d_title"); if(!title)return;
+  const fileEl=document.getElementById("d_file"); const file=fileEl.files[0];
+  let file_path=null;
+  if(file){
+    const ext=file.name.split(".").pop();
+    file_path=`${Date.now()}_${Math.random().toString(36).slice(2,7)}.${ext}`;
+    const {error:upErr}=await sb.storage.from("dokumen").upload(file_path,file);
+    if(upErr){ toast("Gagal unggah file: "+upErr.message); return; }
+  }
+  const {error}=await sb.from("documents").insert({
+    title,category:val("d_cat"),via:val("d_via"),sender:val("d_sender")||null,
+    due_date:val("d_due")||null,status:"baru",file_path
+  });
+  closeSheet(); if(error)return toast(error.message); toast("Dokumen tersimpan."); reload();
+}
+async function openFile(path){
+  const {data,error}=await sb.storage.from("dokumen").createSignedUrl(path,3600);
+  if(error)return toast(error.message); window.open(data.signedUrl,"_blank");
+}
+async function delDoc(id){
+  const d=S.docs.find(x=>x.id===id); if(!d)return;
+  if(!confirm(`Hapus dokumen "${d.title}"?\nFile dan datanya akan dihapus permanen.`))return;
+  if(d.file_path){ await sb.storage.from("dokumen").remove([d.file_path]); }
+  const {error}=await sb.from("documents").delete().eq("id",id);
+  if(error)return toast(error.message);
+  toast("Dokumen dihapus."); reload();
+}
+async function dispDoc(id){
+  const d=S.docs.find(x=>x.id===id);
+  const {error:e1}=await sb.from("tasks").insert({title:"Tindak lanjuti: "+d.title,entity:"Korporat",owner:"Stephanie",status:"kerjakan",due_date:d.due_date,from_doc_id:id});
+  const {error:e2}=await sb.from("documents").update({status:"disposisi"}).eq("id",id);
+  if(e1||e2)return toast((e1||e2).message); toast("Dokumen → jadi tugas di Delegasi."); reload();
+}
+
+function sheetIssue(){
+  sheet("Catat Masalah",`
+    <label>Perusahaan</label><select id="i_company">${S.companies.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select>
+    <label>Masalah</label><input id="i_title" placeholder="Ringkasan masalah">
+    <label>Keterangan (opsional)</label><textarea id="i_desc" rows="2"></textarea>
+    <div style="display:flex;gap:10px">
+      <div style="flex:1"><label>Kategori</label><select id="i_cat">${opts(["Operasional","Keuangan","SDM","Legal","Stok","Lainnya"])}</select></div>
+      <div style="flex:1"><label>Keparahan</label><select id="i_sev">${opts(["Rendah","Sedang","Tinggi"],"Sedang")}</select></div>
+    </div>
+    <button class="go" onclick="addIssue()">Simpan masalah</button>`);
+}
+async function addIssue(){
+  const title=val("i_title"); if(!title)return;
+  const {error}=await sb.from("issues").insert({company_id:val("i_company"),title,description:val("i_desc")||null,category:val("i_cat"),severity:val("i_sev"),status:"baru"});
+  closeSheet(); if(error)return toast(error.message); toast("Masalah dicatat."); reload();
+}
+async function dispIssue(id){
+  const iss=S.issues.find(x=>x.id===id); const comp=S.companies.find(c=>c.id===iss.company_id);
+  const {error:e1}=await sb.from("tasks").insert({title:"Tangani: "+iss.title+(comp?" ("+comp.code+")":""),entity:"Korporat",owner:"Stephanie",status:"kerjakan",from_issue_id:id});
+  const {error:e2}=await sb.from("issues").update({status:"ditangani"}).eq("id",id);
+  if(e1||e2)return toast((e1||e2).message); toast("Masalah → jadi tugas di Delegasi."); reload();
+}
+
+/* ---------- util ---------- */
+function val(id){ return (document.getElementById(id).value||"").trim(); }
+let toastT;
+function toast(msg){
+  const t=document.getElementById("toast"); t.innerHTML=`<div class="b">${esc(msg)}</div>`; t.classList.remove("hide");
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.add("hide"),2400);
+}
+document.getElementById("password").addEventListener("keydown",e=>{if(e.key==="Enter")doLogin();});
+init();
+</script>
+</body>
+</html>
