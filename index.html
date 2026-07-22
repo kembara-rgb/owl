@@ -34,8 +34,8 @@
   header .wm{letter-spacing:.46em;text-indent:.46em;color:var(--gold);font-size:31px;font-weight:800;line-height:1;margin-top:16px;text-shadow:0 2px 12px rgba(233,185,73,.25)}
   header .st{font-family:Georgia,'Times New Roman',serif;font-style:italic;color:#C7D3E8;font-size:12.5px;letter-spacing:.02em;margin-top:9px;line-height:1.5}
   header .gdiv{width:46px;height:2px;background:var(--gold);opacity:.55;margin:14px auto 0;border-radius:2px}
-  .who{display:inline-flex;background:var(--navy900);border-radius:999px;padding:3px;margin-top:14px;box-shadow:inset 0 0 0 1px var(--navy700)}
-  .who button{font-size:13px;font-weight:600;border-radius:999px;padding:7px 16px;color:#9FB0CC}
+  .who{display:inline-flex;flex-wrap:wrap;justify-content:center;gap:2px;background:var(--navy900);border-radius:22px;padding:4px;margin-top:14px;box-shadow:inset 0 0 0 1px var(--navy700);max-width:100%}
+  .who button{font-size:12px;font-weight:600;border-radius:999px;padding:6px 12px;color:#9FB0CC}
   .who button.on{background:var(--gold);color:var(--navy900)}
   .logout{position:absolute;top:14px;right:14px;color:#9FB0CC;font-size:12px;padding:6px 12px;border:1px solid var(--navy700);border-radius:999px;background:rgba(20,32,60,.5)}
 
@@ -155,6 +155,9 @@
       <div class="who">
         <button data-who="Pak Tjen" class="on" onclick="setWho('Pak Tjen')">Pak Tjen</button>
         <button data-who="Stephanie" onclick="setWho('Stephanie')">Stephanie</button>
+        <button data-who="Hendrik" onclick="setWho('Hendrik')">Hendrik</button>
+        <button data-who="Susy" onclick="setWho('Susy')">Susy</button>
+        <button data-who="Ema" onclick="setWho('Ema')">Ema</button>
       </div>
     </header>
     <main id="content"></main>
@@ -177,6 +180,14 @@
 <script>
 let sb = SUPABASE_ANON_KEY ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 const S = { who:"Pak Tjen", tab:"beranda", docFilter:null, companies:[], tasks:[], docs:[], issues:[] };
+
+const USERS = {
+  "Pak Tjen":  {title:"Direktur Utama", hp:"+6281281700800"},
+  "Stephanie": {title:"Direktur", hp:""},
+  "Hendrik":   {title:"Kepala Cabang Palembang", hp:"+6281373940488"},
+  "Susy":      {title:"Sekretaris Cabang Palembang", hp:"+6281994931878"},
+  "Ema":       {title:"Kabag Hutang & Piutang — Lampung · Palembang · Metro", hp:"+6282280105008"}
+};
 
 const TASK_ST = {
   delegasi:{l:"Didelegasikan",bg:"#EAEEF6",fg:"#294069"},
@@ -274,7 +285,7 @@ function viewBeranda(){
     ...S.docs.filter(d=>d.due_date&&daysTo(d.due_date)<=5&&d.status!=="selesai").map(d=>({title:d.title,tag:d.category,d:d.due_date,go:"dokumen"})),
   ].sort((a,b)=>(daysTo(a.d)??99)-(daysTo(b.d)??99)).slice(0,5);
   return `
-    <div class="sub">Halo, <b style="color:var(--ink)">${esc(S.who)}</b> · ${S.who==="Pak Tjen"?"Direktur Utama":"Direktur"}</div>
+    <div class="sub">Halo, <b style="color:var(--ink)">${esc(S.who)}</b> · ${esc(USERS[S.who]?.title||"")}</div>
     <h1 class="title" style="margin-top:2px">Yang butuh perhatian Anda</h1>
     <div class="lens-wrap">
       <button class="lens" onclick="go('delegasi')"><div class="ring"><span>${need}</span></div><div class="lbl">Butuh keputusan</div></button>
@@ -402,7 +413,7 @@ function sheetTask(){
     <label>Apa yang perlu dikerjakan?</label><input id="f_title" placeholder="Tulis tugas…">
     <div style="display:flex;gap:10px">
       <div style="flex:1"><label>Unit</label><select id="f_entity">${opts(["FMCG","Honda","Ekspedisi","Korporat"])}</select></div>
-      <div style="flex:1"><label>Ditugaskan</label><select id="f_owner">${opts(["Stephanie","Pak Tjen"])}</select></div>
+      <div style="flex:1"><label>Ditugaskan</label><select id="f_owner">${opts(Object.keys(USERS))}</select></div>
     </div>
     <label>Tenggat</label><input id="f_due" type="date">
     <button class="go" onclick="addTask()">→ Delegasikan</button>`);
